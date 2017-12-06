@@ -1,3 +1,5 @@
+#' @importFrom tidyr gather
+#' @importFrom dplyr group_by summarise rowwise mutate select
 #' @export
 
 getNodes <- function(intensityMatrix){

@@ -1,3 +1,5 @@
+#' @importFrom magrittr %>%
+#' @importFrom stringr str_split_fixed coll
 #' @export
 
 featureRT <- function(feature){

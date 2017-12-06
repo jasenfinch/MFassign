@@ -4,6 +4,10 @@ Version: 0.3.0
 Authors@R: person("Jasen", "Finch", email = "jsf9@aber.ac.uk", role = c("aut", "cre"))
 Description: Molecular formula assignment for high resolution metabolomics.
 Depends: R (>= 3.4.0)
+Imports: dplyr,
+      tidyr,
+      stringr,
+      magrittr
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

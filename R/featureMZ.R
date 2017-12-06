@@ -1,3 +1,4 @@
+#' @importFrom stringr str_split_fixed str_replace
 #' @export
 
 featureMZ <- function(feature){

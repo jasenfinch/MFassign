@@ -1,3 +1,4 @@
+#' @importFrom stringr str_sub
 #' @export
 
 featureMode <- function(feature){

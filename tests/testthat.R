@@ -1,4 +1,4 @@
 library(testthat)
 library(MFassign)
 
-test_check("MFassign")
+# test_check("MFassign")
