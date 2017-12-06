@@ -7,7 +7,9 @@ Depends: R (>= 3.4.0)
 Imports: dplyr,
       tidyr,
       stringr,
-      magrittr
+      magrittr,
+      Hmisc,
+      tibble
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
