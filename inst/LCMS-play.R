@@ -10,8 +10,22 @@ data("exampleRPLCMS")
 
 intensityMatrix <- exampleRPLCMS
 
-nodes <- getNodes(intensityMatrix)
+nodes <- intensityMatrix %>% 
+  getNodes() %>%
+  groupRT(5/60)
 
-edges <- getEdges(intensityMatrix)
+RTgroups <- nodes %>%
+  getRTgroups()
+
+
+edges <- nodes %>%
+  split(.$RTgroup) %>%
+  map(~{
+    g <- .
+    getEdges(intensityMatrix %>% select(g$Feature))
+  }) %>%
+  bind_rows(.id = 'RTgroup') %>%
+  mutate(RTgroup = RTgroup %>% as.numeric())
+  
 
 

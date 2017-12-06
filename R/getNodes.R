@@ -11,5 +11,6 @@ getNodes <- function(intensityMatrix){
     mutate(Mode = featureMode(Feature),
            `m/z` = featureMZ(Feature),
            RT = featureRT(Feature)) %>%
-    select(Feature,Mode,`m/z`,RT,Intensity)
+    select(Feature,Mode,`m/z`,RT,Intensity) %>%
+    arrange(RT,Mode,`m/z`)
 }

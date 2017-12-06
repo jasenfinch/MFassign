@@ -2,7 +2,7 @@
 #' @importFrom tibble as_tibble
 #' @export
 
-getEdges <- function(intensityMatrix){
+getEdges <- function(intensityMatrix,correlationsMethod = 'pearson',correlationPvalue = 0.05,adjustmentMethod = 'bonferroni'){
   edges <- intensityMatrix %>%
     as.matrix()
   edges[edges == 0] <- NA
