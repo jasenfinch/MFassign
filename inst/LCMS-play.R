@@ -44,20 +44,23 @@ subNetworks <- exampleNodes %>%
     induced_subgraph(network,no$Feature)
   })
 
-ceb <- cluster_edge_betweenness(subNetworks[[22]]) 
+ceb <- cluster_edge_betweenness(subNetworks[[22]],weights = E(subNetworks[[22]])$r) 
 
 dendPlot(ceb, mode = "hclust")
 
 plot(ceb,subNetworks[[22]],vertex.size = 4,vertex.label.cex = 0.7,vertex.label.dist = 1, layout = layout_with_kk)
 
-
-subNetworks <- subNetworks[exampleClusters$Size > 1]
-
-walk(subNetworks,~{
-  plot(.,vertex.size = 4,vertex.label.cex = 0.7,vertex.label.dist = 1, layout = layout_with_kk)
-})
-
 exampleClusterNodes <- exampleNodes %>%
-  filter(Cluster == 22)
+  filter(Cluster == 22) %>%
+  mutate(Community = membership(ceb))
 
+exampleClusterNodes <- exampleEdges %>%
+  filter(Cluster == 22) %>%
+  mutate(Community = membership(ceb))
+
+exampleClusterEdges <- exampleEdges %>%
+  filter(Feature1 %in% exampleClusterNodes$Feature & Feature2 %in% exampleClusterNodes$Feature)
+
+exampleCommunity <- exampleClusterNodes %>%
+  filter(Community == 4)
 
