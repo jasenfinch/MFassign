@@ -1,10 +1,5 @@
 library(tidyverse)
-library(Hmisc)
 library(igraph)
-
-correlationsMethod <- 'pearson'
-adjustmentMethod <- 'bonferroni'
-correlationPvalue <- 0.001
 
 data("exampleRPLCMS")
 
@@ -17,15 +12,52 @@ nodes <- intensityMatrix %>%
 RTgroups <- nodes %>%
   getRTgroups()
 
-
 edges <- nodes %>%
-  split(.$RTgroup) %>%
-  map(~{
-    g <- .
-    getEdges(intensityMatrix %>% select(g$Feature))
-  }) %>%
-  bind_rows(.id = 'RTgroup') %>%
-  mutate(RTgroup = RTgroup %>% as.numeric())
+  getEdges(intensityMatrix)
   
+exampleNodes <- nodes %>%
+  filter(RTgroup == 13)
+
+exampleEdges <- edges %>%
+  filter(RTgroup == 13) %>%
+  select(-RTgroup)
+
+network <- graph_from_data_frame(exampleEdges,vertices = exampleNodes,directed = F)
+
+network %>%
+  plot(vertex.size = 2,vertex.label = NA, layout = layout_with_kk)
+
+exampleNodes <- exampleNodes %>%
+  mutate(Degree = degree(network,mode = 'all'),
+         `Hub Score` = hub_score(network,weights = NA)$vector,
+         `Authority Score` = authority_score(network,weights = NA)$vector,
+         Cluster = clusters(network)$membership)
+
+exampleClusters <- exampleNodes %>%
+  group_by(Cluster) %>%
+  summarise(Size = n())
+
+subNetworks <- exampleNodes %>%
+  split(.$Cluster) %>%
+  map(~{
+    no <- .
+    induced_subgraph(network,no$Feature)
+  })
+
+ceb <- cluster_edge_betweenness(subNetworks[[22]]) 
+
+dendPlot(ceb, mode = "hclust")
+
+plot(ceb,subNetworks[[22]],vertex.size = 4,vertex.label.cex = 0.7,vertex.label.dist = 1, layout = layout_with_kk)
+
+
+subNetworks <- subNetworks[exampleClusters$Size > 1]
+
+walk(subNetworks,~{
+  plot(.,vertex.size = 4,vertex.label.cex = 0.7,vertex.label.dist = 1, layout = layout_with_kk)
+})
+
+exampleClusterNodes <- exampleNodes %>%
+  filter(Cluster == 22)
 
 

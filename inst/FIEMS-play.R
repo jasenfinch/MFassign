@@ -34,16 +34,3 @@ edges <- edges %>%
   mutate(Feature1 = colnames(edges)) %>%
   gather('Feature2','r',-Feature1) %>%
   filter(Feature1 != Feature2, !is.na(r), r > 0.8)
-
-network <- graph_from_data_frame(edges,vertices = nodes,directed = F)
-
-nodes <- nodes %>%
-  mutate(Degree = degree(network,mode = 'all'),
-         `Hub Score` = hub_score(network,weights = NA)$vector,
-         `Authority Score` = authority_score(network,weights = NA)$vector)
-
-network %>%
-  plot(vertex.size = 2,vertex.label = NA, layout = layout_with_kk)
-
-
-networkCliques <- cliques(network)
