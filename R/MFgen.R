@@ -1,3 +1,4 @@
+#' @importFrom mzAnnotation generateMF
 #' @export
 
 MFgen <- function(M,ppm = 6){
