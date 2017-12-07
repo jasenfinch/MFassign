@@ -1,3 +1,4 @@
+#' @importFrom mzAnnotation calcM
 #' @export
 
 getPossibilities <- function(relationships){

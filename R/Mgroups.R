@@ -1,3 +1,4 @@
+#' @importFrom mzAnnotation ppmError
 #' @export
 
 Mgroups <- function(possibilities,ppm = 1){
