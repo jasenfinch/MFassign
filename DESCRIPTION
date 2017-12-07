@@ -11,7 +11,8 @@ Imports: dplyr,
       Hmisc,
       tibble,
       CHNOSZ,
-      mzAnnotation
+      mzAnnotation,
+      parallel
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

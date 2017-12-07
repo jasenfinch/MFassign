@@ -1,6 +1,8 @@
+#' @importFrom parallel makeCluster detectCores parLapply stopCluster
+#' @importFrom mzAnnotation relationshipPredictor
 #' @export
 
-relationships <- function(edges,nodes,adducts,isotopes,nCores = detectCores(),clusterType = 'FORK'){
+relationships <- function(edges, nodes, adducts, isotopes, nCores = detectCores(), clusterType = 'FORK'){
   clus <- makeCluster(nCores,type = clusterType)
   rel <- edges %>%
     split(seq_len(nrow(.))) %>%
