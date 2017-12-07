@@ -12,7 +12,8 @@ Imports: dplyr,
       tibble,
       CHNOSZ,
       mzAnnotation,
-      parallel
+      parallel,
+      igraph
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
