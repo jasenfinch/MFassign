@@ -59,12 +59,17 @@ exampleCommunitys <- exampleNodes %>%
   summarise(Size = n())
 
 exampleCommunityNodes <- exampleNodes %>%
-  filter(Community == 4)
+  split(.$Community)
 
-exampleCommunityEdges <- exampleEdges %>%
-  filter(Feature1 %in% exampleCommunityNodes$Feature & Feature2 %in% exampleCommunityNodes$Feature)
+exampleCommunityEdges <- exampleCommunityNodes %>%
+  map(~{
+    no <- .
+    exampleEdges %>%
+      filter(Feature1 %in% no$Feature & Feature2 %in% no$Feature)
+  })
 
-communityNetwork <- graph_from_data_frame(exampleCommunityEdges,vertices = exampleCommunityNodes,directed = F)
+
+communityNetwork <- graph_from_data_frame(exampleCommunityEdges[[4]],vertices = exampleCommunityNodes[[4]],directed = F)
 
 communityNetwork %>%
   plot(vertex.size = 2,vertex.label = NA, layout = layout_with_kk)
@@ -75,11 +80,29 @@ adducts <- list(n = c("[M-H]1-", "[M+Cl]1-", "[M+K-2H]1-",
                       '[M+NH4]1+','[M+2H]2+','[2M+H]1+'))
 isotopes <- c('13C','18O','13C2')
 
-communityRelationships <- relationships(exampleCommunityEdges,exampleCommunityNodes,adducts,isotopes)
+communityRelationships <- relationships(exampleCommunityEdges[[4]],exampleCommunityNodes[[4]],adducts,isotopes)
 
 possibilities <- getPossibilities(communityRelationships) %>%
-  Mgroups(ppm = 3)
+  Mgroups(ppm = 6)
 
 Mclusters <- possibilities %>%
   group_by(Mgroup) %>%
   summarise(Size = n(),AdjustedM = mean(M) %>% round(5))
+
+MFs <- Mclusters %>%
+  split(seq_len(nrow(.))) %>%
+  map(~{
+    mf <- .
+    MFgen(mf$AdjustedM)
+  }) %>% bind_rows() %>%
+  rowwise() %>%
+  mutate(Score = MFscore(MF)) %>%
+  filter(Score < 5)
+
+Mclusters <- Mclusters %>%
+  left_join(MFs,by = c('AdjustedM' = 'Measured M')) %>%
+  filterMFs()
+
+possibilities <- possibilities %>%
+  left_join(Mclusters) %>%
+  select(-Size)
