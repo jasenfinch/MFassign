@@ -1,1 +1,4 @@
-options(digits = 10)
+
+.onLoad <- function(libname, pkgname){
+  options(digits = 10)
+}
