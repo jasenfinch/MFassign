@@ -6,7 +6,11 @@ adducts <- list(n = c("[M-H]1-", "[M+Cl]1-", "[M+K-2H]1-",
                 p = c('[M+H]1+','[M+K]1+','[M+Na]1+','[M+K41]1+',
                       '[M+NH4]1+','[M+2H]2+','[2M+H]1+'))
 isotopes <- c('13C','18O','13C2')
-
+MgroupPPM <- 6
+MFgenPPM <- 6
+MFscoreThreshold <- 5
+nCores <- detectCores()
+clusterType <- 'FORK'
 
 data("exampleFIEMS")
 
@@ -43,27 +47,15 @@ nodes <- subNetworkCommunities(nodes,subNetworks)
 communityEdges <- getCommunityEdges(edges,nodes)
 
 communityRelationships <- communityEdges %>%
-  split(.$Cluster) %>%
-  map(~{
-    e <- .
-    e %>%
-      split(.$Community) %>%
-      map(~{
-        e <- .
-        relationships(e,nodes,adducts,isotopes)  
-      }) %>%
-      bind_rows(.id = 'Community')
-  }) %>%
-  bind_rows(.id = 'Cluster')
-    
+  getRelationships()
 
 possibilities <- getPossibilities(communityRelationships) %>%
-  Mgroups(ppm = 6)
+  Mgroups(ppm = MgroupPPM)
 
 Mclusters <- possibilities %>%
   getMgroups()
 
-MFs <- getMFs(Mclusters)
+MFs <- getMFs(Mclusters,ppm = MFgenPPM,MFscoreThreshold = MFscoreThreshold,nCores = nCores,clusterType = clusterType)
 
 Mclusters <- Mclusters %>%
   left_join(MFs,by = c('AdjustedM' = 'Measured M')) %>%
