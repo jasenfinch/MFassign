@@ -2,18 +2,24 @@
 
 getCommunityEdges <- function(edges,nodes){
   nodes %>%
-    split(.$Cluster) %>%
+    split(.$RTgroup) %>%
     map(~{
-      n <- .
-      n %>%
-        split(.$Community) %>%
+      no <- .
+      no %>%
+        split(.$Cluster) %>%
         map(~{
-          no <- .
-          edges %>%
-            filter(Feature1 %in% no$Feature & Feature2 %in% no$Feature)
+          n <- .
+          n %>%
+            split(.$Community) %>%
+            map(~{
+              no <- .
+              edges %>%
+                filter(Feature1 %in% no$Feature & Feature2 %in% no$Feature)
+            }) %>%
+            bind_rows(.id = 'Community')
         }) %>%
-        bind_rows(.id = 'Community')
+        bind_rows(.id = 'Cluster')
     }) %>%
-    bind_rows(.id = 'Cluster') %>%
-    select(Feature1:r,Cluster,Community)
+    bind_rows() %>%
+    select(Feature1:r,RTgroup,Cluster,Community)
 }

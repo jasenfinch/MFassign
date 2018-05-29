@@ -1,7 +1,16 @@
 library(tidyverse)
-library(igraph)
 library(MFassign)
-library(mzAnnotation)
+
+adducts <- list(n = c("[M-H]1-", "[M+Cl]1-", "[M+K-2H]1-", 
+                      "[M-2H]2-", "[M+Cl37]1-","[2M-H]1-"),
+                p = c('[M+H]1+','[M+K]1+','[M+Na]1+','[M+K41]1+',
+                      '[M+NH4]1+','[M+2H]2+','[2M+H]1+'))
+isotopes <- c('13C','18O','13C2')
+MgroupPPM <- 6
+MFgenPPM <- 6
+MFscoreThreshold <- 5
+nCores <- detectCores()
+clusterType <- 'FORK'
 
 data("exampleRPLCMS")
 
@@ -15,83 +24,38 @@ RTgroups <- nodes %>%
   getRTgroups()
 
 edges <- nodes %>%
-  getEdges(intensityMatrix)
+  getEdges(intensityMatrix) %>%
+  filter(r > 0)
 
-exampleNodes <- nodes %>%
-  filter(RTgroup == 13)
+network <- buildNetwork(nodes,edges)
 
-exampleEdges <- edges %>%
-  filter(RTgroup == 13) %>%
-  select(-RTgroup)
+nodes <- networkClusters(nodes,network)
 
-network <- graph_from_data_frame(exampleEdges,vertices = exampleNodes,directed = F)
+subNetworks <- getSubNetworks(network,nodes)
 
-network %>%
-  plot(vertex.size = 2,vertex.label = NA, layout = layout_with_kk)
+nodes <- subNetworkCommunities(nodes,subNetworks) 
 
-exampleNodes <- exampleNodes %>%
-  mutate(Degree = degree(network,mode = 'all'),
-         `Hub Score` = hub_score(network,weights = NA)$vector,
-         `Authority Score` = authority_score(network,weights = NA)$vector,
-         Cluster = clusters(network)$membership)
-
-exampleClusters <- exampleNodes %>%
-  group_by(Cluster) %>%
+communitiesSummary <- nodes %>%
+  group_by(RTgroup,Cluster,Community) %>%
   summarise(Size = n())
 
-subNetworks <- exampleNodes %>%
-  split(.$Cluster) %>%
-  map(~{
-    no <- .
-    induced_subgraph(network,no$Feature)
-  })
+communityEdges <- getCommunityEdges(edges,nodes)
 
-ceb <- cluster_edge_betweenness(subNetworks[[22]],weights = E(subNetworks[[22]])$r) 
-
-dendPlot(ceb, mode = "hclust")
-
-plot(ceb,subNetworks[[22]],vertex.size = 4,vertex.label.cex = 0.7,vertex.label.dist = 1, layout = layout_with_kk)
-
-exampleClusterNodes <- exampleNodes %>%
-  filter(Cluster == 22) %>%
-  mutate(Community = membership(ceb))
-
-exampleClusterEdges <- exampleEdges %>%
-  filter(Feature1 %in% exampleClusterNodes$Feature & Feature2 %in% exampleClusterNodes$Feature)
-
-exampleCommunityNodes <- exampleClusterNodes %>%
-  filter(Community == 4)
-
-exampleCommunityEdges <- exampleClusterEdges %>%
-  filter(Feature1 %in% exampleCommunityNodes$Feature & Feature2 %in% exampleCommunityNodes$Feature)
-
-adducts <- list(n = c("[M-H]1-", "[M+Cl]1-", "[M+K-2H]1-", 
-                      "[M-2H]2-", "[M+Cl37]1-","[2M-H]1-"),
-                p = c('[M+H]1+','[M+K]1+','[M+Na]1+','[M+K41]1+',
-                      '[M+NH4]1+','[M+2H]2+','[2M+H]1+'))
-isotopes <- c('13C','18O','13C2')
-
-communityRelationships <- relationships(exampleCommunityEdges,exampleCommunityNodes,adducts,isotopes)
+communityRelationships <- communityEdges %>%
+  getRelationships()
 
 possibilities <- getPossibilities(communityRelationships) %>%
-  Mgroups()
+  Mgroups(ppm = MgroupPPM)
 
 Mclusters <- possibilities %>%
-  group_by(Mgroup) %>%
-  summarise(Size = n(),AdjustedM = mean(M) %>% round(5))
+  getMgroups()
 
-possibilities <- possibilities %>%
-  left_join(select(Mclusters,Mgroup,AdjustedM))
-
-MFs <- Mclusters %>%
-  split(seq_len(nrow(.))) %>%
-  map(~{
-    mf <- .
-    MFgen(mf$AdjustedM)
-  }) %>% bind_rows() %>%
-  rowwise() %>%
-  mutate(Score = MFscore(MF)) %>%
-  filter(Score < 5)
+MFs <- getMFs(Mclusters,ppm = MFgenPPM,MFscoreThreshold = MFscoreThreshold,nCores = nCores,clusterType = clusterType)
 
 Mclusters <- Mclusters %>%
-  left_join(MFs,by = c('AdjustedM' = 'Measured M'))
+  left_join(MFs,by = c('AdjustedM' = 'Measured M')) %>%
+  filterMFs()
+
+possibilities <- possibilities %>%
+  left_join(Mclusters) %>%
+  select(-Size)

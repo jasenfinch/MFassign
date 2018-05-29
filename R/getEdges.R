@@ -8,5 +8,6 @@ getEdges <- function(nodes,intensityMatrix){
       correlate(intensityMatrix %>% select(g$Feature))
     }) %>%
     bind_rows(.id = 'RTgroup') %>%
-    mutate(RTgroup = RTgroup %>% as.numeric())
+    mutate(RTgroup = RTgroup %>% as.numeric()) %>%
+    select(Feature1:r,RTgroup)
 }

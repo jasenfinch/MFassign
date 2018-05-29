@@ -3,9 +3,15 @@
 
 getSubNetworks <- function(network,nodes){
   nodes %>%
-    split(.$Cluster) %>%
+    split(.$RTgroup) %>%
     map(~{
       no <- .
-      induced_subgraph(network,no$Feature)
+      no %>%
+      split(.$Cluster) %>%
+        map(~{
+          n <- .
+          induced_subgraph(network[[n$RTgroup[1]]],n$Feature)
+        })
     })
+    
 }

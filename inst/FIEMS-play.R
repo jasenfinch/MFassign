@@ -23,7 +23,6 @@ nodes <- intensityMatrix %>%
 
 edges <- nodes %>%
   getEdges(intensityMatrix) %>%
-  select(-RTgroup) %>%
   filter(r > 0)
 
 network <- buildNetwork(nodes,edges)
@@ -34,7 +33,7 @@ network <- buildNetwork(nodes,edges)
 nodes <- networkClusters(nodes,network)
 
 clusters <- nodes %>%
-  group_by(Cluster) %>%
+  group_by(RTgroup,Cluster) %>%
   summarise(Size = n())
 
 subNetworks <- getSubNetworks(network,nodes)

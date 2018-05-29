@@ -2,5 +2,12 @@
 #' @export
 
 buildNetwork <- function(nodes,edges){
-  graph_from_data_frame(edges,vertices = nodes,directed = F)
+  nodes %>%
+    split(.$RTgroup) %>%
+    map(~{
+      no <- .
+      e <- edges %>%
+        filter(RTgroup == no$RTgroup[1])
+      graph_from_data_frame(e,vertices = no,directed = F) 
+    }) 
 }
